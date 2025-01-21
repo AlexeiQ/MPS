@@ -265,7 +265,7 @@ public abstract class EditorComponent extends JComponent implements Scrollable, 
   private final List<LeftMarginMouseListener> myLeftMarginPressListeners = new ArrayList<>(0);
 
   private final EditorSettingsListener mySettingsListener = () -> getModelAccess().runReadInEDT(() -> {
-    if (isDisposed()) {
+    if (isDisposed() || isProjectDisposed()) {
       return;
     }
     releaseTypecheckingSession(true);
