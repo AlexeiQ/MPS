@@ -26,8 +26,6 @@ import org.jetbrains.mps.openapi.module.SRepository;
 
 public class InspectorEditorComponent extends EditorComponent {
 
-  private boolean myReadOnly;
-
   public InspectorEditorComponent(@NotNull SRepository p) {
     this(p, EditorConfigurationBuilder.buildDefault());
   }
@@ -62,14 +60,5 @@ public class InspectorEditorComponent extends EditorComponent {
    */
   public void installRevealNodeListener(EditorComponent target) {
     target.getSelectionManager().addSelectionListener(new RevealNodeListener(this));
-  }
-
-  public void setReadOnly(boolean readOnly) {
-    myReadOnly = readOnly;
-  }
-
-  @Override
-  public boolean isReadOnly() {
-    return myReadOnly || super.isReadOnly();
   }
 }
