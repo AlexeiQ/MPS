@@ -16,9 +16,11 @@
 package jetbrains.mps.smodel.runtime;
 
 import jetbrains.mps.classloading.ModuleClassLoader;
+import jetbrains.mps.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
 /**
@@ -31,6 +33,8 @@ import java.lang.ref.WeakReference;
  * </p>
  */
 public class IconResource {
+  private static final Logger LOG = Logger.getLogger(IconResource.class);
+
   private final String myIconResId;
   private final String myClassName; //used to make IconResources unique and avoid things like MPS-24005
   private final WeakReference<Class<?>> myResourceProvider;
@@ -58,6 +62,26 @@ public class IconResource {
     return cl instanceof ModuleClassLoader && ((ModuleClassLoader) cl).isDisposed();
   }
 
+@Deprecated(since = "3.4", forRemoval = true)
+  //left for compatibility purposes. Does not allow to use 2x & dark icons
+  public InputStream getResource() {
+    Class c = myResourceProvider.get();
+    if (c == null) {
+      showDisposedError("<class already GC'ed>");
+      return null;
+    }
+    ClassLoader cl = c.getClassLoader();
+    if (cl instanceof ModuleClassLoader && ((ModuleClassLoader) cl).isDisposed()) {
+      String rp = c.getSimpleName();
+      showDisposedError(rp);
+    }
+    InputStream result = c.getResourceAsStream(myIconResId);
+    if (result == null) {
+      LOG.warning("Unable to get icon's InputStream. Resource provider=" + c.getSimpleName() + "; iconId:=" + myIconResId);
+    }
+    return result;
+  }
+
   public String getResourceId() {
     return myIconResId;
   }
@@ -65,6 +89,12 @@ public class IconResource {
   @Nullable
   public Class getProvider() {
     return myResourceProvider.get();
+  }
+
+  private void showDisposedError(String rp) {
+    LOG.error("Icon is acquired from a disposed classloader. This will lead to a memleak. \n" +
+        "Do care about classes reloading when you hold an IconResource for a long time. \n" +
+        "Resource provider=" + rp + "; iconId=" + myIconResId, new Throwable());
   }
 
   @Override
